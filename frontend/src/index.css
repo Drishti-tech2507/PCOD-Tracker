@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔥 RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 🌙 FULL HEIGHT */
+html, body, #root {
+  height: 100%;
+}
+
+/* ✨ PREMIUM BACKGROUND + FONT */
+body {
+  font-family: "Poppins", sans-serif;
+  color: white;
+
+  /* 🌌 Gradient Background */
+  background: linear-gradient(
+    135deg,
+    #0f0c29,
+    #302b63,
+    #24243e
+  );
+
+  /* Smooth rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ✨ SCROLLBAR (Aesthetic) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9f7aea;
+  border-radius: 10px;
+}
+
+/* ✨ BUTTON BASE STYLE */
+button {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* ✨ INPUT BASE STYLE */
+input {
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+/* ✨ GLASS EFFECT UTILITY */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+}
+
+/* ✨ GLOW TEXT (OPTIONAL) */
+.glow-text {
+  text-shadow: 0 0 10px rgba(255, 105, 180, 0.7);
+}
