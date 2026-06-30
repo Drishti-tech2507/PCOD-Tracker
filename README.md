@@ -255,9 +255,6 @@ const firebaseConfig = {
 
 - 📱 Android & iOS App
 - 📅 Menstrual Cycle Tracker
-- ❤️ Health Monitoring
-- 🥗 Personalized Diet Plans
-- 🏃 Workout Recommendations
 - 📊 Health Analytics Dashboard
 - 🔔 Smart Notifications
 - ☁️ Cloud Backup & Sync
