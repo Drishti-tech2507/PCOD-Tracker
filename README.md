@@ -263,5 +263,7 @@ const firebaseConfig = {
 
 # 👩‍💻 Contributors
 
-- [Drishti Chopra](https://github.com/Drishti-tech2507)
-- [Sparsh Kapoor](https://github.com/SparshKapoor-CODER)
+
+<a href="https://github.com/Drishti-tech2507/PCOD-Tracker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Drishti-tech2507/PCOD-Tracker" />
+</a>
