@@ -18,11 +18,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 @CrossOrigin(origins = "*")
 public class ChatController {
 
-    @Value("${gemini.api.key}")
-    private String geminiApiKey;
+    // 🔁 Use Groq API key
+    @Value("${groq.api.key}")
+    private String groqApiKey;
 
-    private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // Groq endpoint (OpenAI-compatible)
+    private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     private static final String SYSTEM_INSTRUCTION =
         "# ROLE\n" +
@@ -45,13 +46,10 @@ public class ChatController {
         "- Suggest a doctor for severe pain or heavy bleeding.\n";
 
     // 🌸 IN-MEMORY SESSION STORE (per conversation, resets on server restart)
-    // For production, use Redis or database-backed sessions
     private final Map<String, List<Map<String, Object>>> sessions = new HashMap<>();
 
     @PostMapping
-    public Map<String, String> chat(
-            @RequestBody Map<String, String> body
-    ) {
+    public Map<String, String> chat(@RequestBody Map<String, String> body) {
         String message = body.get("message");
         String sessionId = body.get("sessionId");
 
@@ -69,7 +67,7 @@ public class ChatController {
         sessions.putIfAbsent(sessionId, new ArrayList<>());
         List<Map<String, Object>> history = sessions.get(sessionId);
 
-        // 🌸 ADD USER MESSAGE TO HISTORY
+        // 🌸 ADD USER MESSAGE TO HISTORY (stored in your internal format)
         Map<String, Object> userTurn = new HashMap<>();
         userTurn.put("role", "user");
         List<Map<String, String>> userParts = new ArrayList<>();
@@ -80,41 +78,55 @@ public class ChatController {
         history.add(userTurn);
 
         try {
-            // 🌸 BUILD GEMINI REQUEST BODY
+            // 🌸 BUILD GROQ REQUEST BODY
             Map<String, Object> requestBody = new HashMap<>();
+            // Choose a model – you can change this to any Groq-supported model
+            requestBody.put("model", "llama-3.3-70b-versatile");
+            requestBody.put("temperature", 0.8);
 
-            // System instruction
-            Map<String, Object> systemInstruction = new HashMap<>();
-            List<Map<String, String>> systemParts = new ArrayList<>();
-            Map<String, String> systemPart = new HashMap<>();
-            systemPart.put("text", SYSTEM_INSTRUCTION);
-            systemParts.add(systemPart);
-            systemInstruction.put("parts", systemParts);
-            requestBody.put("system_instruction", systemInstruction);
+            // Build messages list in Groq format: [ { role, content }, ... ]
+            List<Map<String, String>> messages = new ArrayList<>();
 
-            // Conversation history
-            requestBody.put("contents", history);
+            // 1) System instruction as a system message
+            Map<String, String> systemMsg = new HashMap<>();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", SYSTEM_INSTRUCTION);
+            messages.add(systemMsg);
 
-            // Generation config
-            Map<String, Object> generationConfig = new HashMap<>();
-            generationConfig.put("temperature", 0.8);
-            requestBody.put("generationConfig", generationConfig);
+            // 2) Convert entire conversation history (excluding system)
+            for (Map<String, Object> turn : history) {
+                String role = (String) turn.get("role");
+                // Map internal "model" to "assistant" for Groq
+                if ("model".equals(role)) {
+                    role = "assistant";
+                }
+                // Extract text from the parts list (assume only one part per turn)
+                List<Map<String, String>> parts = (List<Map<String, String>>) turn.get("parts");
+                String content = parts.get(0).get("text");
+                Map<String, String> msg = new HashMap<>();
+                msg.put("role", role);
+                msg.put("content", content);
+                messages.add(msg);
+            }
 
-            // 🌸 CALL GEMINI API
+            requestBody.put("messages", messages);
+
+            // 🌸 CALL GROQ API
             WebClient webClient = WebClient.builder().build();
 
-            Map<String, Object> geminiResponse = webClient.post()
-                .uri(GEMINI_URL + "?key=" + geminiApiKey)
+            Map<String, Object> groqResponse = webClient.post()
+                .uri(GROQ_URL)
                 .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + groqApiKey)
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
 
             // 🌸 EXTRACT REPLY TEXT
-            String replyText = extractReply(geminiResponse);
+            String replyText = extractGroqReply(groqResponse);
 
-            // 🌸 ADD BOT REPLY TO HISTORY
+            // 🌸 ADD BOT REPLY TO HISTORY (store in your internal format: role "model")
             Map<String, Object> modelTurn = new HashMap<>();
             modelTurn.put("role", "model");
             List<Map<String, String>> modelParts = new ArrayList<>();
@@ -147,22 +159,15 @@ public class ChatController {
         }
     }
 
-    // 🌸 HELPER: EXTRACT TEXT FROM GEMINI RESPONSE
+    // 🌸 HELPER: EXTRACT TEXT FROM GROQ RESPONSE (OpenAI-compatible)
     @SuppressWarnings("unchecked")
-    private String extractReply(Map<String, Object> geminiResponse) {
+    private String extractGroqReply(Map<String, Object> groqResponse) {
         try {
-            List<Map<String, Object>> candidates =
-                (List<Map<String, Object>>) geminiResponse.get("candidates");
-
-            Map<String, Object> firstCandidate = candidates.get(0);
-            Map<String, Object> content =
-                (Map<String, Object>) firstCandidate.get("content");
-
-            List<Map<String, Object>> parts =
-                (List<Map<String, Object>>) content.get("parts");
-
-            return (String) parts.get(0).get("text");
-
+            List<Map<String, Object>> choices =
+                (List<Map<String, Object>>) groqResponse.get("choices");
+            Map<String, Object> firstChoice = choices.get(0);
+            Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+            return (String) message.get("content");
         } catch (Exception e) {
             return "Main samajh nahi payi 🌸 Thoda aur batao?";
         }
