@@ -29,14 +29,12 @@ function Login() {
 
       const response =
         await axios.post(
-
-          "http://localhost:8080/api/auth/login",
-
-          {
-            email,
-            password,
-          }
-        );
+  "https://pcod-tracker-11-z6is.onrender.com/api/auth/login",
+  {
+    email,
+    password,
+  }
+);
 
       console.log(
         response.data
