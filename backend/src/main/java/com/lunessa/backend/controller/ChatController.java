@@ -1,170 +1,171 @@
 package com.lunessa.backend.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin("*")
+@CrossOrigin(origins = "*")
 public class ChatController {
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    private final WebClient webClient = WebClient.builder().build();
+
     private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     private static final String SYSTEM_INSTRUCTION =
-        "# ROLE\n" +
-        "You are Sakhi – a warm, friendly, and knowledgeable chatbot for young women in India.\n" +
-        "You spread awareness about menstrual health and PCOD like a trusted older sister.\n\n" +
-        "# PERSONALITY\n" +
-        "- Friendly, Warm, Non-judgmental, Encouraging, Relatable, Empowering.\n" +
-        "- Use emojis sparingly (🌸, 👋, 😊).\n" +
-        "- Use Hinglish naturally (e.g., Ghar ka khana, Periods ke time).\n" +
-        "- Use simple language, avoid medical jargon.\n" +
-        "- Use GenZ language occasionally to connect with younger users.\n\n" +
-        "# RESPONSIBILITIES\n" +
-        "1. Menstrual Health Education (Cycles, hygiene, cramps).\n" +
-        "2. PCOD Awareness (Symptoms, lifestyle, Indian nutrition).\n" +
-        "3. Emotional Support (Listen, validate, encourage).\n" +
-        "4. Myth Busting (Gently correct taboos).\n" +
-        "5. Guiding to Doctors (Encourage professional help for diagnosis).\n\n" +
-        "# BOUNDARIES\n" +
-        "- Do NOT diagnose or prescribe medicine.\n" +
-        "- Suggest a doctor for severe pain or heavy bleeding.\n";
+            "You are Sakhi, a warm, friendly wellness chatbot for Lunessa. " +
+            "Help users regarding PCOD, periods, women's health, nutrition, lifestyle and self-care. " +
+            "Never diagnose diseases or prescribe medicines. " +
+            "Reply in simple Hinglish with a caring tone.";
 
-    // 🌸 IN-MEMORY SESSION STORE (per conversation, resets on server restart)
-    // For production, use Redis or database-backed sessions
     private final Map<String, List<Map<String, Object>>> sessions = new HashMap<>();
 
     @PostMapping
-    public Map<String, String> chat(
-            @RequestBody Map<String, String> body
-    ) {
+    public Map<String, String> chat(@RequestBody Map<String, String> body) {
+
+        Map<String, String> response = new HashMap<>();
+
         String message = body.get("message");
         String sessionId = body.get("sessionId");
 
         if (message == null || message.trim().isEmpty()) {
-            Map<String, String> error = new HashMap<>();
-            error.put("reply", "Kuch to likho yarr! 😅");
-            return error;
+            response.put("reply", "Please type something 🌸");
+            return response;
         }
 
-        if (sessionId == null || sessionId.isEmpty()) {
-            sessionId = "default";
+        if (sessionId == null || sessionId.isBlank()) {
+            sessionId = UUID.randomUUID().toString();
         }
 
-        // 🌸 GET OR CREATE HISTORY FOR THIS SESSION
+        if (geminiApiKey == null || geminiApiKey.isBlank()) {
+            response.put("reply", "Gemini API key is missing.");
+            return response;
+        }
+
         sessions.putIfAbsent(sessionId, new ArrayList<>());
+
         List<Map<String, Object>> history = sessions.get(sessionId);
 
-        // 🌸 ADD USER MESSAGE TO HISTORY
         Map<String, Object> userTurn = new HashMap<>();
         userTurn.put("role", "user");
+
         List<Map<String, String>> userParts = new ArrayList<>();
-        Map<String, String> userPart = new HashMap<>();
-        userPart.put("text", message);
-        userParts.add(userPart);
+        Map<String, String> userText = new HashMap<>();
+        userText.put("text", message);
+
+        userParts.add(userText);
+
         userTurn.put("parts", userParts);
+
         history.add(userTurn);
 
         try {
-            // 🌸 BUILD GEMINI REQUEST BODY
-            Map<String, Object> requestBody = new HashMap<>();
 
-            // System instruction
-            Map<String, Object> systemInstruction = new HashMap<>();
+            Map<String, Object> request = new HashMap<>();
+
+            Map<String, Object> system = new HashMap<>();
+
             List<Map<String, String>> systemParts = new ArrayList<>();
-            Map<String, String> systemPart = new HashMap<>();
-            systemPart.put("text", SYSTEM_INSTRUCTION);
-            systemParts.add(systemPart);
-            systemInstruction.put("parts", systemParts);
-            requestBody.put("system_instruction", systemInstruction);
 
-            // Conversation history
-            requestBody.put("contents", history);
+            Map<String, String> s = new HashMap<>();
 
-            // Generation config
-            Map<String, Object> generationConfig = new HashMap<>();
-            generationConfig.put("temperature", 0.8);
-            requestBody.put("generationConfig", generationConfig);
+            s.put("text", SYSTEM_INSTRUCTION);
 
-            // 🌸 CALL GEMINI API
-            WebClient webClient = WebClient.builder().build();
+            systemParts.add(s);
+
+            system.put("parts", systemParts);
+
+            request.put("system_instruction", system);
+
+            request.put("contents", history);
+
+            Map<String, Object> generation = new HashMap<>();
+            generation.put("temperature", 0.8);
+
+            request.put("generationConfig", generation);
 
             Map<String, Object> geminiResponse = webClient.post()
-                .uri(GEMINI_URL + "?key=" + geminiApiKey)
-                .header("Content-Type", "application/json")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
+                    .uri(GEMINI_URL + "?key=" + geminiApiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
 
-            // 🌸 EXTRACT REPLY TEXT
-            String replyText = extractReply(geminiResponse);
+            String reply = extractReply(geminiResponse);
 
-            // 🌸 ADD BOT REPLY TO HISTORY
-            Map<String, Object> modelTurn = new HashMap<>();
-            modelTurn.put("role", "model");
-            List<Map<String, String>> modelParts = new ArrayList<>();
-            Map<String, String> modelPart = new HashMap<>();
-            modelPart.put("text", replyText);
-            modelParts.add(modelPart);
-            modelTurn.put("parts", modelParts);
-            history.add(modelTurn);
+            Map<String, Object> botTurn = new HashMap<>();
 
-            // 🌸 RETURN REPLY
-            Map<String, String> response = new HashMap<>();
-            response.put("reply", replyText);
+            botTurn.put("role", "model");
+
+            List<Map<String, String>> botParts = new ArrayList<>();
+
+            Map<String, String> botText = new HashMap<>();
+
+            botText.put("text", reply);
+
+            botParts.add(botText);
+
+            botTurn.put("parts", botParts);
+
+            history.add(botTurn);
+
+            response.put("reply", reply);
+
             return response;
 
         } catch (Exception e) {
+
             e.printStackTrace();
 
-            // 🌸 REMOVE THE USER MESSAGE FROM HISTORY IF API CALL FAILED
-            history.remove(history.size() - 1);
+            if (!history.isEmpty()) {
+                history.remove(history.size() - 1);
+            }
 
-            Map<String, String> error = new HashMap<>();
-            error.put(
-                "reply",
-                "Arre yaar, Sakhi is having some trouble right now 🌸\n" +
-                "Please try again in a moment 💖\n\n" +
-                "📧 lunessa.support@gmail.com\n" +
-                "📱 +91 7856483799"
+            response.put(
+                    "reply",
+                    "Sakhi is temporarily unavailable 🌸 Please try again after some time."
             );
-            return error;
+
+            return response;
         }
     }
 
-    // 🌸 HELPER: EXTRACT TEXT FROM GEMINI RESPONSE
     @SuppressWarnings("unchecked")
     private String extractReply(Map<String, Object> geminiResponse) {
-        try {
-            List<Map<String, Object>> candidates =
-                (List<Map<String, Object>>) geminiResponse.get("candidates");
 
-            Map<String, Object> firstCandidate = candidates.get(0);
+        try {
+
+            List<Map<String, Object>> candidates =
+                    (List<Map<String, Object>>) geminiResponse.get("candidates");
+
+            if (candidates == null || candidates.isEmpty()) {
+                return "I couldn't generate a response.";
+            }
+
+            Map<String, Object> candidate = candidates.get(0);
+
             Map<String, Object> content =
-                (Map<String, Object>) firstCandidate.get("content");
+                    (Map<String, Object>) candidate.get("content");
 
             List<Map<String, Object>> parts =
-                (List<Map<String, Object>>) content.get("parts");
+                    (List<Map<String, Object>>) content.get("parts");
 
-            return (String) parts.get(0).get("text");
+            return parts.get(0).get("text").toString();
 
         } catch (Exception e) {
-            return "Main samajh nahi payi 🌸 Thoda aur batao?";
+
+            return "Main samajh nahi payi 🌸 Thoda aur batao.";
+
         }
     }
+
 }
