@@ -37,82 +37,62 @@ function Checkout() {
     0
   );
 
-  // 🌸 FAKE PAYMENT SUCCESS
-  const handlePayment =
-    async () => {
+ const handlePayment = async () => {
 
-      if (
-        !name ||
-        !email ||
-        !address
-      ) {
+  if (!name || !email || !address) {
+    alert("Please fill all details 🌸");
+    return;
+  }
 
-        alert(
-          "Please fill all details 🌸"
-        );
+  try {
 
-        return;
+    setLoading(true);
+
+    const response = await axios.post(
+      "https://pcod-tracker-12-f0bm.onrender.com/api/checkout/pay",
+      {
+        name,
+        email,
+        address,
+        total,
+        cart,
       }
+    );
 
-      try {
+    console.log(response.data);
 
-        setLoading(true);
+    // Save Orders
+    const previousOrders =
+      JSON.parse(localStorage.getItem("lunessa_orders")) || [];
 
-        // 🌸 SAVE ORDER + SEND EMAIL
-        await axios.post(
+    localStorage.setItem(
+      "lunessa_orders",
+      JSON.stringify([...previousOrders, ...cart])
+    );
 
-          "http://localhost:8080/api/checkout/pay",
+    localStorage.removeItem("lunessa_cart");
 
-          {
-            name,
-            email,
-            address,
-            total,
-            cart,
-          }
-        );
+    alert("Payment Successful 💖");
 
-        // 🌸 SAVE ORDERS
-        const previousOrders =
-          JSON.parse(
-            localStorage.getItem(
-              "lunessa_orders"
-            )
-          ) || [];
+    navigate("/profile");
 
-        localStorage.setItem(
+  } catch (error) {
 
-          "lunessa_orders",
+    console.error(error);
 
-          JSON.stringify([
-            ...previousOrders,
-            ...cart,
-          ])
-        );
+    if (error.response) {
+      alert(error.response.data.message || "Payment Failed ❌");
+    } else {
+      alert("Cannot connect to backend ❌");
+    }
 
-        alert(
-          "Payment Successful 💖"
-        );
+  } finally {
 
-        localStorage.removeItem(
-          "lunessa_cart"
-        );
+    setLoading(false);
 
-        navigate("/profile");
+  }
 
-      } catch (error) {
-
-        console.log(error);
-
-        alert(
-          "Payment Failed ❌"
-        );
-
-      } finally {
-
-        setLoading(false);
-      }
-    };
+};
 
   return (
 
