@@ -1,6 +1,3 @@
-// FULL UPDATED Plan.jsx
-// PROFESSIONAL WELLNESS PLAN + EMAIL SENT + BEAUTIFUL UI
-
 import Navbar from "../components/Navbar";
 import { useState } from "react";
 import axios from "axios";
@@ -121,79 +118,49 @@ function Plan() {
 
           {/* EMAIL */}
           <input
-            type="email"
-            placeholder="Enter Your Email Address"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            className="bg-white/10 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition"
+          type="email"
+          placeholder="Enter Your Email Address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="bg-gray-800/50 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition text-white"
           />
 
           {/* CONDITION */}
           <select
             value={condition}
-            onChange={(e) =>
-              setCondition(e.target.value)
-            }
-            className="bg-white/10 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition"
+            onChange={(e) => setCondition(e.target.value)}
+            className="bg-gray-800/50 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition text-white"
           >
-
-            <option value="">
-              Select Condition
-            </option>
-
-            <option>PCOD</option>
-
-            <option>PCOS</option>
-
-            <option>Irregular Periods</option>
-
+            <option value="" className="bg-gray-800 text-white">Select Condition</option>
+            <option className="bg-gray-800 text-white">PCOD</option>
+            <option className="bg-gray-800 text-white">PCOS</option>
+            <option className="bg-gray-800 text-white">Irregular Periods</option>
           </select>
 
           {/* DIET */}
           <select
             value={diet}
-            onChange={(e) =>
-              setDiet(e.target.value)
-            }
-            className="bg-white/10 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition"
+            onChange={(e) => setDiet(e.target.value)}
+            className="bg-gray-800/50 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition text-white"
           >
-
-            <option value="">
-              Diet Preference
-            </option>
-
-            <option>Vegetarian</option>
-
-            <option>Vegan</option>
-
-            <option>Non-Vegetarian</option>
-
+            <option value="" className="bg-gray-800 text-white">Diet Preference</option>
+            <option className="bg-gray-800 text-white">Vegetarian</option>
+            <option className="bg-gray-800 text-white">Vegan</option>
+            <option className="bg-gray-800 text-white">Non-Vegetarian</option>
           </select>
 
-          {/* GOAL */}
+`         {/* GOAL */}
           <select
             value={goal}
-            onChange={(e) =>
-              setGoal(e.target.value)
-            }
-            className="bg-white/10 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition"
+            onChange={(e) => setGoal(e.target.value)}
+            className="bg-gray-800/50 border border-white/10 px-6 py-5 rounded-2xl backdrop-blur-lg outline-none focus:border-pink-400 transition text-white"
           >
-
-            <option value="">
-              Select Goal
-            </option>
-
-            <option>Weight Loss</option>
-
-            <option>Hormonal Balance</option>
-
-            <option>Stress Relief</option>
-
-            <option>Healthy Lifestyle</option>
-
-          </select>
+            <option value="" className="bg-gray-800 text-white">Select Goal</option>
+            <option className="bg-gray-800 text-white">Weight Loss</option>
+            <option className="bg-gray-800 text-white">Hormonal Balance</option>
+            <option className="bg-gray-800 text-white">Stress Relief</option>
+            <option className="bg-gray-800 text-white">Healthy Lifestyle</option>
+          </select>`
 
         </div>
 

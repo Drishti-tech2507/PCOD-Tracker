@@ -121,7 +121,7 @@ Lunessa/
 ## Clone Repository
 
 ```bash
-git clone https://github.com/your-username/lunessa.git
+git clone https://github.com/Drishti-tech2507/PCOD-Tracker.git
 
 cd lunessa
 ```
