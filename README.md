@@ -123,7 +123,7 @@ Lunessa/
 ```bash
 git clone https://github.com/Drishti-tech2507/PCOD-Tracker.git
 
-cd lunessa
+cd PCOD-Tracker
 ```
 
 ---
