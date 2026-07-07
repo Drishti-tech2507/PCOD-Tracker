@@ -41,7 +41,7 @@ function ForgotPassword() {
       const response =
         await axios.post(
 
-          "http://localhost:8080/api/password/send-otp",
+          "/api/password/send-otp",
 
           { email }
         );
@@ -74,7 +74,7 @@ function ForgotPassword() {
       const response =
         await axios.post(
 
-          "http://localhost:8080/api/password/verify-otp",
+          "/api/password/verify-otp",
 
           {
             email,
@@ -111,7 +111,7 @@ function ForgotPassword() {
         const response =
           await axios.post(
 
-            "http://localhost:8080/api/password/reset",
+            "/api/password/reset",
 
             {
               email,

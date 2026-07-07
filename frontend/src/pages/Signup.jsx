@@ -61,7 +61,7 @@ function Signup() {
         const response =
           await axios.post(
 
-            "http://localhost:8080/api/auth/signup",
+            "/api/auth/signup",
 
             {
               name,
